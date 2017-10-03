@@ -53,8 +53,12 @@ public class MorseDecoder {
 
         double[] sampleBuffer = new double[BIN_SIZE * inputFile.getNumChannels()];
         for (int binIndex = 0; binIndex < totalBinCount; binIndex++) {
-            // Get the right number of samples from the inputFile
-            // Sum all the samples together and store them in the returnBuffer
+            inputFile.readFrames(sampleBuffer, BIN_SIZE);
+            int sumOfSignals = 0;
+            for (int i = 0; i < sampleBuffer.length; i++) {
+                sumOfSignals += sampleBuffer[binIndex];
+                returnBuffer[binIndex] = sumOfSignals;
+            }
         }
         return returnBuffer;
     }
@@ -76,11 +80,38 @@ public class MorseDecoder {
      * @param powerMeasurements the array of power measurements from binWavPower
      * @return the Morse code string of dots, dashes, and spaces
      */
+    public static String dashOrDot (int powerLength) {
+        String returnString = "";
+        if (powerLength > DASH_BIN_COUNT) {
+            returnString = returnString + "-";
+        } else {
+            returnString = returnString + ".";
+        }
+        return returnString;
+    }
     private static String powerToDotDash(final double[] powerMeasurements) {
         /*
          * There are four conditions to handle. Symbols should only be output when you see
          * transitions. You will also have to store how much power or silence you have seen.
          */
+
+        String returnString = "";
+        int powerLength = 0;
+        boolean isPower = false;
+        boolean wasPower = false;
+        for (int i = 0; i < powerMeasurments.length; i++) {
+            if (isPower && wasPower) {
+                howLongItWasAPower++;
+            }
+            if (!isPower && wasPower) {
+                if (howLongItWasAPower > DASH_BIN_COUNT) {
+                    returnString = returnString + "-";
+                } else {
+                    returnString = returnString + ".";
+                }
+            }
+        }
+
 
         // if ispower and waspower
         // else if ispower and not waspower
